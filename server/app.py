@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify
 from flask_cors import CORS
 import passwords
 from pymongo import MongoClient
@@ -22,15 +22,15 @@ def login():
     if request.method == "GET":
         return render_template("login.html")
     else:
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.json["username"]
+        password = request.json["password"]
         
         results = users.find({"$and": [{"username": username}, {"password": password}]}).to_list()
         
         if len(results) == 1:
-            return 200
+            return jsonify({"status": 200, "username": username})
         else:
-            return 400
+            return jsonify({"status": 400})
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -38,14 +38,14 @@ def signup():
     if request.method == "GET":
         return render_template("signup.html")
     else:
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.json["username"]
+        password = request.json["password"]
         
         results = users.find({"username": username}).to_list()
          
         # #check if user already exists
         if len(results) == 0:
             users.insert_one({"username": username, "password": password})
-            return 200
+            return jsonify({"status": 200})
         else:
-            return 400
+            return jsonify({"status": 400})
