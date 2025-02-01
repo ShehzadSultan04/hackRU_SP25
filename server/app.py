@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, redirect
+from flask_cors import CORS
 import passwords
 from pymongo import MongoClient
 
 app = Flask(__name__)
+CORS(app)
 
 client = MongoClient(passwords.passwords["MongoURI"])
 db = client["Secretary"]
