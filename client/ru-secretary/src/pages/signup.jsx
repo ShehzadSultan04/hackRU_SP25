@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 //sign up with a user name and password
 const SignUp = () => {
     const [username, setUsername] = useState("");
@@ -8,20 +8,22 @@ const SignUp = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch("/api/signup", {
+            const response = await fetch("http://127.0.0.1:5000/signup", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({ username, password }),
             });
+
             if (response.ok) {
-                history.push("/login");
+                // history.push("/login");
             } else {
-                setError("Sign Up Failed");
+                const errorText = await response.text();
+                setError("Sign Up Failed: " + errorText);
             }
         } catch (error) {
-            setError("Sign Up Failed");
+            setError("Error: " + error.message);
         }
     };
 
