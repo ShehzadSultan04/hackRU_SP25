@@ -7,6 +7,7 @@ app = Flask(__name__)
 client = MongoClient(passwords.passwords["MongoURI"])
 db = client["Secretary"]
 users = db["Users"]
+classes = db["Classes"]
 
 
 @app.route("/")
@@ -25,9 +26,9 @@ def login():
         results = users.find({"$and": [{"username": username}, {"password": password}]}).to_list()
         
         if len(results) == 1:
-            return "<h1>Welcome " + username + "!</h1>"
+            return 200
         else:
-            return "<h1>Invalid username or password</h1>"
+            return 400
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -43,6 +44,6 @@ def signup():
         # #check if user already exists
         if len(results) == 0:
             users.insert_one({"username": username, "password": password})
-            return redirect("/")
+            return 200
         else:
-            return "<h3>User already exists. Login instead</h3>"
+            return 400
