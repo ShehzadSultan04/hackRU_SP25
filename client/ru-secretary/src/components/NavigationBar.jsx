@@ -6,7 +6,7 @@ const NavigationBar = () => {
             <div className="container-fluid">
                 <div className="navbar-header">
                     <a className="navbar-brand" href="#">
-                        WebSiteName
+                        RU Secretary
                     </a>
                 </div>
                 <button
@@ -23,11 +23,16 @@ const NavigationBar = () => {
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav me-auto">
                         <li className="nav-item active">
-                            <a className="nav-link" href="#">
-                                Home
+                            <a className="nav-link" href="/dashboard">
+                                Dashboard
                             </a>
                         </li>
-                        <li className="nav-item dropdown">
+                        <li className="nav-item active">
+                            <a className="nav-link" href="/calendar">
+                                Calendar
+                            </a>
+                        </li>
+                        {/* <li className="nav-item dropdown">
                             <a
                                 className="nav-link dropdown-toggle"
                                 data-bs-toggle="dropdown"
@@ -59,17 +64,17 @@ const NavigationBar = () => {
                             <a className="nav-link" href="#">
                                 Page 2
                             </a>
-                        </li>
+                        </li> */}
                     </ul>
                     <ul className="navbar-nav ms-auto">
                         <li className="nav-item">
-                            <a className="nav-link" href="#">
+                            <a className="nav-link" href="/signup">
                                 <span className="glyphicon glyphicon-user"></span>{" "}
                                 Sign Up
                             </a>
                         </li>
                         <li className="nav-item">
-                            <a className="nav-link" href="#">
+                            <a className="nav-link" href="/login">
                                 <span className="glyphicon glyphicon-log-in"></span>{" "}
                                 Login
                             </a>
