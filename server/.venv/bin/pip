@@ -1,4 +1,4 @@
-#!/Users/darshan/Desktop/Code/hackRU_SP25/.venv/bin/python3.11
+#!/Users/darshan/Desktop/Code/hackRU_SP25/server/.venv/bin/python3.11
 # -*- coding: utf-8 -*-
 import re
 import sys
