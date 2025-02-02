@@ -4,7 +4,8 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import timeGridPlugin from '@fullcalendar/timegrid'
 
-export default function CalendarPage() {
+
+export default function CalendarPage({events}) {
   return (
       <div className='calendar-container'>
         <FullCalendar
@@ -22,20 +23,13 @@ export default function CalendarPage() {
           editable={true}
           selectable={true}
           selectMirror={true}
+          initialView='timeGridWeek'
           resources={[
             { id: 'a', title: 'Auditorium A'},
             { id: 'b', title: 'Auditorium B', eventColor: 'green' },
             { id: 'c', title: 'Auditorium C', eventColor: 'orange' },
           ]}
-          initialEvents={[
-            { 
-              title: 'class 1', 
-              start: "2025-02-05T12:00:00", 
-              end: "2025-02-05T14:00:00", 
-              resourceId: 'b',
-              color: 'green'
-            }
-          ]}
+          events={events}
           
         />
       </div>
