@@ -1,0 +1,120 @@
+[
+  {
+    "bounds": {
+      "northeast": {
+        "lat": 40.5241179,
+        "lng": -74.46040119999999
+      },
+      "southwest": {
+        "lat": 40.5231781,
+        "lng": -74.4649019
+      }
+    },
+    "copyrights": "Map data \u00a92025 Google",
+    "legs": [
+      {
+        "distance": {
+          "text": "0.3 mi",
+          "value": 475
+        },
+        "duration": {
+          "text": "6 mins",
+          "value": 381
+        },
+        "end_address": "Biomedical Engineering Building, 599 Taylor Rd, Piscataway, NJ 08854, USA",
+        "end_location": {
+          "lat": 40.5241179,
+          "lng": -74.46040119999999
+        },
+        "start_address": "Allison Road Classroom Building, 607 Allison Rd, Piscataway, NJ 08854, USA",
+        "start_location": {
+          "lat": 40.5236807,
+          "lng": -74.4649019
+        },
+        "steps": [
+          {
+            "distance": {
+              "text": "194 ft",
+              "value": 59
+            },
+            "duration": {
+              "text": "1 min",
+              "value": 49
+            },
+            "end_location": {
+              "lat": 40.5238168,
+              "lng": -74.46430889999999
+            },
+            "html_instructions": "Head <b>east</b> on <b>Allison Rd</b>",
+            "polyline": {
+              "points": "_xivFr|neM@m@@O?E?I?EAE?CCEYQ"
+            },
+            "start_location": {
+              "lat": 40.5236807,
+              "lng": -74.4649019
+            },
+            "travel_mode": "WALKING"
+          },
+          {
+            "distance": {
+              "text": "0.1 mi",
+              "value": 241
+            },
+            "duration": {
+              "text": "3 mins",
+              "value": 195
+            },
+            "end_location": {
+              "lat": 40.5231781,
+              "lng": -74.46179599999999
+            },
+            "html_instructions": "Turn <b>right</b>",
+            "maneuver": "turn-right",
+            "polyline": {
+              "points": "{xivF|xneMNi@DSn@uB?M@G?EAEAGSSACCMAI?G?K@KBK?APi@Rg@ZcANc@"
+            },
+            "start_location": {
+              "lat": 40.5238168,
+              "lng": -74.46430889999999
+            },
+            "travel_mode": "WALKING"
+          },
+          {
+            "distance": {
+              "text": "0.1 mi",
+              "value": 175
+            },
+            "duration": {
+              "text": "2 mins",
+              "value": 137
+            },
+            "end_location": {
+              "lat": 40.5241179,
+              "lng": -74.46040119999999
+            },
+            "html_instructions": "Turn <b>left</b><div style=\"font-size:0.9em\">Destination will be on the left</div>",
+            "maneuver": "turn-left",
+            "polyline": {
+              "points": "{tivFfineMCIESCKAG?IBK?W?IAIAEACAGCGEC]UAE@IOOm@_@MIQK]WCA"
+            },
+            "start_location": {
+              "lat": 40.5231781,
+              "lng": -74.46179599999999
+            },
+            "travel_mode": "WALKING"
+          }
+        ],
+        "traffic_speed_entry": [],
+        "via_waypoint": []
+      }
+    ],
+    "overview_polyline": {
+      "points": "_xivFr|neMBcAAY]WT}@n@uB?M@MCMUWEW?SDWPk@n@kBNc@CII_@AQBc@?IG[IK]UAE@IOO{@i@s@e@"
+    },
+    "summary": "Allison Rd",
+    "warnings": [
+      "Walking directions are in beta. Use caution \u2013 This route may be missing sidewalks or pedestrian paths."
+    ],
+    "waypoint_order": []
+  }
+]
