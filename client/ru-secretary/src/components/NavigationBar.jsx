@@ -32,6 +32,11 @@ const NavigationBar = () => {
                                 Calendar
                             </a>
                         </li>
+                        <li className="nav-item active">
+                            <a className="nav-link" href="/directions">
+                                Get Directions
+                            </a>
+                        </li>
                         {/* <li className="nav-item dropdown">
                             <a
                                 className="nav-link dropdown-toggle"
