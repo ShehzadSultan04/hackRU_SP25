@@ -30,9 +30,9 @@ const Calendar = () => {
     const [expandedClass, setExpandedClass] = useState(null);
     const [sections, setSections] = useState({});
 
-    // useEffect(() => {
-    //     console.log("class data: ", classes);
-    // }, [classes]);
+    useEffect(() => {
+        console.log("class data: ", classes);
+    }, [classes]);
 
     const toggleClassExpand = (className) => {
         if (expandedClass === className) {
@@ -82,62 +82,53 @@ const Calendar = () => {
         const today = new Date();
         const oneWeekLater = new Date();
         oneWeekLater.setDate(today.getDate() + 7);
-
-        // Filter events within the next 7 days
-        const upcomingEvents = events.filter((event) => {
-            const eventDate = new Date(event.start);
-            return eventDate >= today && eventDate <= oneWeekLater;
-        });
-
-        // Convert events to a comparable format
-        const eventTimes = upcomingEvents.map((event) => {
-            const eventDate = new Date(event.start);
-            const eventDay = eventDate.getDay();
-            const eventStartTime =
-                event.start.split("T")[1]?.slice(0, 5) || "00:00";
-            const eventEndTime =
-                event.end.split("T")[1]?.slice(0, 5) || "00:00";
-
+    
+        // Convert event times to comparable format
+        const eventTimes = events.map((event) => {
+            const eventStart = new Date(event.start);
+            const eventEnd = new Date(event.end);
+    
             return {
-                day: eventDay,
-                startTime: eventStartTime,
-                endTime: eventEndTime,
+                day: eventStart.getDay(),
+                startTime: eventStart.toTimeString().slice(0, 5), // "HH:MM" format
+                endTime: eventEnd.toTimeString().slice(0, 5),
             };
         });
-
-        // Compare each class section with events
-        const classAvailability = classes.map((classData) => {
-            const [, ...sections] = classData; // Ignore first element (credits)
-
-            let conflictFreeSections = 0;
-            let conflictingSections = 0;
-
-            sections.forEach((section) => {
-                const isConflict = section.some(([day, startTime, endTime]) => {
-                    return eventTimes.some(
-                        (event) =>
-                            event.day === day &&
-                            event.startTime < endTime &&
-                            event.endTime > startTime
-                    );
-                });
-
-                if (isConflict) {
-                    conflictingSections++;
-                } else {
-                    conflictFreeSections++;
+    
+        let totalConflictingSections = 0;
+        let totalConflictFreeSections = 0;
+    
+        // Check each class section against the events
+        classes.sections.forEach((section) => {
+            let sectionHasConflict = false;
+    
+            section.forEach(([day, startTime, endTime]) => {
+                const hasConflict = eventTimes.some(
+                    (event) =>
+                        event.day === day &&
+                        event.startTime < endTime &&
+                        event.endTime > startTime
+                );
+    
+                if (hasConflict) {
+                    sectionHasConflict = true;
                 }
             });
-
-            return {
-                totalSections: sections.length,
-                conflictFreeSections,
-                conflictingSections,
-            };
+    
+            if (sectionHasConflict) {
+                totalConflictingSections++;
+            } else {
+                totalConflictFreeSections++;
+            }
         });
-
-        return classAvailability;
+    
+        return {
+            totalSections: classes.sections.length,
+            conflictFreeSections: totalConflictFreeSections,
+            conflictingSections: totalConflictingSections,
+        };
     };
+    
 
     useEffect(() => {
         console.log("events: ", events);
@@ -656,100 +647,65 @@ const Calendar = () => {
                 </Popover>
 
                 {classes.length > 0 ? (
-                    classes.map((classItem, index) => (
-                        <div
-                            key={index}
-                            className="p-4 bg-white shadow-md rounded-md cursor-pointer"
-                            onClick={() => toggleClassExpand(classItem.name)}
-                        >
-                            <div className="flex justify-between items-center">
-                                <span>{classItem.name}</span>
-                                <span> {classItem.credits} credits</span>
-                            </div>
+    classes.map((classItem, index) => {
+        // Compute conflicts for this class
+        const { conflictFreeSections, conflictingSections } = checkClassConflicts(events, classItem);
 
-                            {expandedClass === classItem.name &&
-                                sections[classItem.name] && (
-                                    <div className="mt-2 bg-gray-100 p-2 rounded-md">
-                                        <h4 className="font-bold text-gray-700">
-                                            Sections:
-                                        </h4>
-                                        <ul>
-                                            {sections[classItem.name].length >
-                                            0 ? (
-                                                sections[classItem.name].map(
-                                                    (section, i) => (
-                                                        <li
-                                                            key={i}
-                                                            className="text-gray-600 p-2 border-b"
-                                                        >
-                                                            <div className="font-semibold">
-                                                                Section{" "}
-                                                                {
-                                                                    section.sectionNumber
-                                                                }
-                                                            </div>
-                                                            <div>
-                                                                Code:{" "}
-                                                                {
-                                                                    section.sectionCode
-                                                                }
-                                                            </div>
-                                                            <div>
-                                                                Professor:{" "}
-                                                                {
-                                                                    section.professor
-                                                                }
-                                                            </div>
-                                                            <div>
-                                                                Location:{" "}
-                                                                {
-                                                                    section.location
-                                                                }
-                                                            </div>
-                                                            <div>
-                                                                Timings:
-                                                                <ul className="ml-4 list-disc">
-                                                                    {section.timings.map(
-                                                                        (
-                                                                            time,
-                                                                            j
-                                                                        ) => (
-                                                                            <li
-                                                                                key={
-                                                                                    j
-                                                                                }
-                                                                            >
-                                                                                Day{" "}
-                                                                                {
-                                                                                    time[0]
-                                                                                }
-                                                                                :{" "}
-                                                                                {
-                                                                                    time[1]
-                                                                                }{" "}
-                                                                                -{" "}
-                                                                                {
-                                                                                    time[2]
-                                                                                }
-                                                                            </li>
-                                                                        )
-                                                                    )}
-                                                                </ul>
-                                                            </div>
-                                                        </li>
-                                                    )
-                                                )
-                                            ) : (
-                                                <p>No sections available.</p>
-                                            )}
-                                        </ul>
-                                    </div>
-                                )}
-                        </div>
-                    ))
-                ) : (
-                    <p>No classes available.</p>
+        return (
+            <div
+                key={index}
+                className="p-4 bg-white shadow-md rounded-md cursor-pointer"
+                onClick={() => toggleClassExpand(classItem.name)}
+            >
+                <div className="flex justify-between items-center">
+                    <span>{classItem.name}</span>
+                    <div className="flex items-center gap-2">
+                        <span>{classItem.credits} credits</span>
+                        <span className="text-green-600 font-semibold">
+                            ✅ {conflictFreeSections}
+                        </span>
+                        <span className="text-red-600 font-semibold">
+                            ❌ {conflictingSections}
+                        </span>
+                    </div>
+                </div>
+
+                {expandedClass === classItem.name && sections[classItem.name] && (
+                    <div className="mt-2 bg-gray-100 p-2 rounded-md">
+                        <h4 className="font-bold text-gray-700">Sections:</h4>
+                        <ul>
+                            {sections[classItem.name].length > 0 ? (
+                                sections[classItem.name].map((section, i) => (
+                                    <li key={i} className="text-gray-600 p-2 border-b">
+                                        <div className="font-semibold">Section {section.sectionNumber}</div>
+                                        <div>Code: {section.sectionCode}</div>
+                                        <div>Professor: {section.professor}</div>
+                                        <div>Location: {section.location}</div>
+                                        <div>
+                                            Timings:
+                                            <ul className="ml-4 list-disc">
+                                                {section.timings.map((time, j) => (
+                                                    <li key={j}>
+                                                        Day {time[0]}: {time[1]} - {time[2]}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </li>
+                                ))
+                            ) : (
+                                <p>No sections available.</p>
+                            )}
+                        </ul>
+                    </div>
                 )}
+            </div>
+        );
+    })
+) : (
+    <p>No classes available.</p>
+)}
+
             </div>
 
             {/* Calendar */}
