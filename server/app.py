@@ -48,7 +48,8 @@ def signup():
 
 @app.get("/getDeps")
 def getDeps():
-    return jsonify(departments.find({}))
+    deps = dict([(x["departmentName"], x["departmentCode"]) for x in departments.find({}).to_list()])
+    return departments.find({}).to_list()
 
 @app.get("/getClassFromDep")
 def getClassFromDep():
