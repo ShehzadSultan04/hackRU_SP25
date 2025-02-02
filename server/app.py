@@ -25,10 +25,10 @@ def index():
 def map():
     index1 = request.json["index1"]
     index2 = request.json["index2"]
-
-    class1Loc = classes.find({"index": index1}).to_list()[0]["location"].split("-")[0]
-    class2Loc = classes.find({"index": index2}).to_list()[0]["location"].split("-")[0]
-
+    
+    class1Loc = classes.find({"index": int(index1)}).to_list()[0]["location"].split("-")[0]
+    class2Loc = classes.find({"index": int(index2)}).to_list()[0]["location"].split("-")[0]
+    
     l1 = buildings.find({"Code": class1Loc.upper()}).to_list()[0]["Address"]
     l2 = buildings.find({"Code": class2Loc.upper()}).to_list()[0]["Address"]
 
@@ -36,12 +36,10 @@ def map():
     gmaps = googlemaps.Client(key=passwords.passwords["GoogleAPIKey"])
     now = datetime.now()
     directions_result = gmaps.directions(l1,
-                                     l2,
-                                     mode="walking",
-                                     departure_time=now)
+                                         l2,
+                                         mode="walking",
+                                         departure_time=now)
 
-    # l1 = "607 Allison Rd, Piscataway, NJ 08854".replace(" ", "+")
-    # l2 = "599 Taylor Rd, Piscataway, NJ 08854".replace(" ", "+")
     mapurl = "https://maps.googleapis.com/maps/api/staticmap?scale=2&size=400x400&markers="+ l1.replace(" ", "+") +"%7C" + l2.replace(" ", "+") + "&path=enc:" + directions_result[0]["overview_polyline"]["points"] + "&key=" + passwords.passwords["GoogleAPIKey"]
 
     return jsonify({"mapurl": mapurl})
@@ -115,6 +113,19 @@ def getSectionFromClass():
 
     for x in allClasses:
         results[x["section"]] = [x["index"], x["times"], x["professor"], x["location"]]
+
+    if len(results) != 0:
+        return jsonify(results)
+    else:
+        return jsonify({"status": 400})
+
+@app.get("/getSections")
+def getSections():
+    allClasses = classes.find({}).to_list()
+    results = {}
+
+    for x in allClasses:
+        results[x["index"]] = [x["name"], x["section"], x["times"], x["professor"], x["location"]]
 
     if len(results) != 0:
         return jsonify(results)
