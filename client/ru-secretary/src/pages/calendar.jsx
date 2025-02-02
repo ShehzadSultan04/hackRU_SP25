@@ -24,13 +24,120 @@ const Calendar = () => {
     const [value, setValue] = useState("");
     const { data: session } = useSession();
     const [events, setEvents] = useState([]);
-
-    useEffect(() => {
-        console.log("Events: ", events);
-    }, [events]);
-
+    const [classSections, setClassSections] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [classes, setClasses] = useState([]);
+    const [expandedClass, setExpandedClass] = useState(null);
+    const [sections, setSections] = useState({});
+
+    // useEffect(() => {
+    //     console.log("class data: ", classes);
+    // }, [classes]);
+
+    const toggleClassExpand = (className) => {
+        if (expandedClass === className) {
+            setExpandedClass(null);
+        } else {
+            setExpandedClass(className);
+            fetchSectionsForClass(className); // Fetch sections when expanded
+        }
+    };
+
+    const fetchSectionsForClass = async (className) => {
+        console.log("CLASS NAME: ", className);
+        try {
+            const response = await fetch(
+                "http://127.0.0.1:5000/getSectionFromClass",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ class: className }),
+                }
+            );
+
+            const data = await response.json();
+            console.log("PRINTING DATA: ", data);
+
+            // Process the sections data
+            const processedSections = Object.entries(data).map(
+                ([sectionNum, sectionInfo]) => ({
+                    sectionNumber: sectionNum,
+                    sectionCode: sectionInfo[0],
+                    timings: sectionInfo[1], // Array of [day, start, end]
+                    professor: sectionInfo[2],
+                    location: sectionInfo[3],
+                })
+            );
+
+            setSections((prevSections) => ({
+                ...prevSections,
+                [className]: processedSections, // Stores processed sections
+            }));
+        } catch (error) {
+            console.error("Error fetching sections:", error);
+        }
+    };
+
+    const checkClassConflicts = (events, classes) => {
+        const today = new Date();
+        const oneWeekLater = new Date();
+        oneWeekLater.setDate(today.getDate() + 7);
+
+        // Filter events within the next 7 days
+        const upcomingEvents = events.filter((event) => {
+            const eventDate = new Date(event.start);
+            return eventDate >= today && eventDate <= oneWeekLater;
+        });
+
+        // Convert events to a comparable format
+        const eventTimes = upcomingEvents.map((event) => {
+            const eventDate = new Date(event.start);
+            const eventDay = eventDate.getDay();
+            const eventStartTime =
+                event.start.split("T")[1]?.slice(0, 5) || "00:00";
+            const eventEndTime =
+                event.end.split("T")[1]?.slice(0, 5) || "00:00";
+
+            return {
+                day: eventDay,
+                startTime: eventStartTime,
+                endTime: eventEndTime,
+            };
+        });
+
+        // Compare each class section with events
+        const classAvailability = classes.map((classData) => {
+            const [, ...sections] = classData; // Ignore first element (credits)
+
+            let conflictFreeSections = 0;
+            let conflictingSections = 0;
+
+            sections.forEach((section) => {
+                const isConflict = section.some(([day, startTime, endTime]) => {
+                    return eventTimes.some(
+                        (event) =>
+                            event.day === day &&
+                            event.startTime < endTime &&
+                            event.endTime > startTime
+                    );
+                });
+
+                if (isConflict) {
+                    conflictingSections++;
+                } else {
+                    conflictFreeSections++;
+                }
+            });
+
+            return {
+                totalSections: sections.length,
+                conflictFreeSections,
+                conflictingSections,
+            };
+        });
+
+        return classAvailability;
+    };
 
     useEffect(() => {
         console.log("events: ", events);
@@ -297,13 +404,19 @@ const Calendar = () => {
             const data = await response.json();
             console.log("PRINTING DATA: ", data);
 
+            setClassSections(data);
+
             // Process and set the class information
             const classData = Object.entries(data).map(
                 ([className, classInfo]) => {
                     const credits = classInfo[0]; // First number represents credits
+                    const sections = classInfo.slice(1); // Rest of the array are sections
+                    console.log("SECTIONS: ", sections);
+
                     return {
                         name: className,
                         credits: credits,
+                        sections: sections,
                     };
                 }
             );
@@ -546,34 +659,98 @@ const Calendar = () => {
                     classes.map((classItem, index) => (
                         <div
                             key={index}
-                            className="p-4 bg-white shadow-md rounded-md flex justify-between items-center"
+                            className="p-4 bg-white shadow-md rounded-md cursor-pointer"
+                            onClick={() => toggleClassExpand(classItem.name)}
                         >
-                            <span>{classItem.name}</span>
-                            <span> {classItem.credits} credits</span>
+                            <div className="flex justify-between items-center">
+                                <span>{classItem.name}</span>
+                                <span> {classItem.credits} credits</span>
+                            </div>
+
+                            {expandedClass === classItem.name &&
+                                sections[classItem.name] && (
+                                    <div className="mt-2 bg-gray-100 p-2 rounded-md">
+                                        <h4 className="font-bold text-gray-700">
+                                            Sections:
+                                        </h4>
+                                        <ul>
+                                            {sections[classItem.name].length >
+                                            0 ? (
+                                                sections[classItem.name].map(
+                                                    (section, i) => (
+                                                        <li
+                                                            key={i}
+                                                            className="text-gray-600 p-2 border-b"
+                                                        >
+                                                            <div className="font-semibold">
+                                                                Section{" "}
+                                                                {
+                                                                    section.sectionNumber
+                                                                }
+                                                            </div>
+                                                            <div>
+                                                                Code:{" "}
+                                                                {
+                                                                    section.sectionCode
+                                                                }
+                                                            </div>
+                                                            <div>
+                                                                Professor:{" "}
+                                                                {
+                                                                    section.professor
+                                                                }
+                                                            </div>
+                                                            <div>
+                                                                Location:{" "}
+                                                                {
+                                                                    section.location
+                                                                }
+                                                            </div>
+                                                            <div>
+                                                                Timings:
+                                                                <ul className="ml-4 list-disc">
+                                                                    {section.timings.map(
+                                                                        (
+                                                                            time,
+                                                                            j
+                                                                        ) => (
+                                                                            <li
+                                                                                key={
+                                                                                    j
+                                                                                }
+                                                                            >
+                                                                                Day{" "}
+                                                                                {
+                                                                                    time[0]
+                                                                                }
+                                                                                :{" "}
+                                                                                {
+                                                                                    time[1]
+                                                                                }{" "}
+                                                                                -{" "}
+                                                                                {
+                                                                                    time[2]
+                                                                                }
+                                                                            </li>
+                                                                        )
+                                                                    )}
+                                                                </ul>
+                                                            </div>
+                                                        </li>
+                                                    )
+                                                )
+                                            ) : (
+                                                <p>No sections available.</p>
+                                            )}
+                                        </ul>
+                                    </div>
+                                )}
                         </div>
                     ))
                 ) : (
                     <p>No classes available.</p>
                 )}
             </div>
-
-            {/* Classes List */}
-            {/* <div
-                style={{
-                    padding: "1rem",
-                    backgroundColor: "#f3f4f6",
-                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    borderRadius: "8px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1rem",
-                    height: "100%",
-                    width: "25%",
-                    minWidth: "100px",
-                    maxWidth: "320px",
-                }}
-            >
-            </div> */}
 
             {/* Calendar */}
             <div
