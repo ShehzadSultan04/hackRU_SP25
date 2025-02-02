@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, session
 from flask_cors import CORS
 import passwords
 from pymongo import MongoClient
 
 app = Flask(__name__)
 CORS(app)
+app.secret_key = passwords.secret_key
 
 client = MongoClient(passwords.passwords["MongoURI"])
 db = client["Secretary"]
@@ -26,6 +27,7 @@ def login():
     results = users.find({"$and": [{"username": username}, {"password": password}]}).to_list()
 
     if len(results) == 1:
+        session["username"] = username
         return jsonify({"status": 200, "username": username})
     else:
         return jsonify({"status": 400})
@@ -46,19 +48,33 @@ def signup():
     else:
         return jsonify({"status": 400})
 
+@app.get("/checkAuth")
+def checkAuth():
+    if "username" in session:
+        return jsonify({"status": 200, "username": session["username"]})
+    else:
+        return jsonify({"status": 400})
+
 @app.get("/getDeps")
 def getDeps():
     deps = dict([(x["departmentName"], x["departmentCode"]) for x in departments.find({}).to_list()])
     return jsonify(deps)
 
-@app.get("/getClassFromDep")
+@app.post("/getClassFromDep")
 def getClassFromDep():
     depName = request.json["dep"]
 
-    results = classes.find({"departmentName": depName}).to_list()
+    allClasses = classes.find({"department": depName}).to_list()
+    results = {}
+
+    for x in allClasses:
+        if x["name"] not in results.keys():
+            results[x["name"]] = x["credits"]
 
     if len(results) != 0:
         return jsonify(results)
+    else:
+        return jsonify({"status": 400})
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

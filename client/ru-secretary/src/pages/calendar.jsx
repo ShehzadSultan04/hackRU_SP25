@@ -12,22 +12,28 @@ const Calendar = () => {
         },
     ]);
 
-    return (
-        <div className="flex h-screen w-full">
-            {/* Sidebar */}
-            <div className="w-1/4 p-4 bg-gray-100 shadow-md rounded-lg flex flex-col space-y-4">
-                <button className="px-4 py-2 text-black rounded-lg bg-blue-500 hover:bg-blue-700">
-                    Add Class
-                </button>
-                <button className="px-4 py-2 text-black rounded-lg bg-green-500 hover:bg-green-700">
-                    Add Task
-                </button>
-            </div>
+    const handleSelect = (selectInfo) => {
+        const title = prompt("Enter Event Title:");
+        if (title) {
+            const newEvent = {
+                title,
+                start: selectInfo.startStr,
+                end: selectInfo.endStr,
+            };
+            setEvents([...events, newEvent]);
+        }
+    };
 
-            {/* Calendar */}
-            {/* <div className="w-3/4 p-4 bg-white shadow-md rounded-lg">
-                <CalendarComponent events={events} setEvents={setEvents} />
-            </div> */}
+    return (
+        <div className="p-4 bg-white shadow-md rounded-lg">
+            <h1 className="text-black text-2xl font-bold mb-4">
+                Calendar Page
+            </h1>
+            <CalendarComponent
+                events={events}
+                setEvents={setEvents}
+                handleSelect={handleSelect}
+            />
         </div>
     );
 };
