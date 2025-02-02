@@ -29,6 +29,8 @@ const Calendar = () => {
     const [classes, setClasses] = useState([]);
     const [expandedClass, setExpandedClass] = useState(null);
     const [sections, setSections] = useState({});
+    const [tempEvents, setTempEvents] = useState([]);
+
 
     useEffect(() => {
         console.log("class data: ", classes);
@@ -41,6 +43,38 @@ const Calendar = () => {
             setExpandedClass(className);
             fetchSectionsForClass(className); // Fetch sections when expanded
         }
+    };
+
+    const getDateTimeForNextDay = (dayOfWeek, time) => {
+        const today = new Date();
+        const currentDay = today.getDay();
+        const daysToAdd = (dayOfWeek - currentDay + 7) % 7;
+        
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() + daysToAdd);
+        
+        // Convert "HH:MM" to actual Date object time
+        const [hours, minutes] = time.split(":").map(Number);
+        targetDate.setHours(hours, minutes, 0, 0);
+    
+        return targetDate.toISOString(); // Full ISO string for Google Calendar format
+    };
+    
+
+    const handleSectionHover = (section, className) => {
+        const hoverEvents = section.timings.map((time, index) => ({
+            id: `temp-${className}-${index}`,
+            title: `Preview: ${className} Section ${section.sectionNumber}`,
+            start: getDateTimeForNextDay(time[0], time[1]), // Convert to full DateTime
+            end: getDateTimeForNextDay(time[0], time[2]),
+            color: "gray",
+        }));
+    
+        setTempEvents(hoverEvents);
+    };
+    
+    const handleSectionHoverLeave = () => {
+        setTempEvents([]);
     };
 
     const fetchSectionsForClass = async (className) => {
@@ -664,12 +698,19 @@ const Calendar = () => {
                 </div>
 
                 {expandedClass === classItem.name && sections[classItem.name] && (
+                    
                     <div className="mt-2 bg-gray-100 p-2 rounded-md">
                         <h4 className="font-bold text-gray-700">Sections:</h4>
                         <ul>
                             {sections[classItem.name].length > 0 ? (
                                 sections[classItem.name].map((section, i) => (
-                                    <li key={i} className="text-gray-600 p-2 border-b">
+                                    <li
+    key={i}
+    className="text-gray-600 p-2 border-b"
+    onMouseEnter={() => handleSectionHover(section, classItem.name)}
+    onMouseLeave={handleSectionHoverLeave}
+>
+
                                         <div className="font-semibold">Section {section.sectionNumber}</div>
                                         <div>Code: {section.sectionCode}</div>
                                         <div>Professor: {section.professor}</div>
@@ -712,11 +753,11 @@ const Calendar = () => {
                 }}
             >
                 <CalendarComponent
-                    events={events}
-                    setEvents={setEvents}
-                    handleSelect={handleSelect}
-                    handleEventDelete={handleEventDelete}
-                />
+    events={[...events, ...tempEvents]} // Merge real & temp events
+    setEvents={setEvents}
+    handleSelect={handleSelect}
+    handleEventDelete={handleEventDelete}
+/>
             </div>
         </div>
     );
