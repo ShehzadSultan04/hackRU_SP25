@@ -14,8 +14,20 @@ const Calendar = () => {
             end: "2025-02-06T17:10:00",
             color: "orange"
         };
-        setEvents([...events, newEvent]);
+        setEvents([...events, newEvent]); 
     };
+
+    const handleSelect = (selectInfo) => {
+        const title = prompt("Enter Event Title:"); 
+        if (title) {
+            const newEvent = {
+                title,
+                start: selectInfo.startStr,
+                end: selectInfo.endStr,
+            };
+            setEvents([...events, newEvent]); 
+        }
+    }
 
     return (
         <div className="p-4 bg-white shadow-md rounded-lg">
@@ -27,7 +39,7 @@ const Calendar = () => {
             </button>
             <CalendarComponent
                 events={events}
-                setEvents={setEvents}
+                handleSelect={handleSelect}
             />
         </div>
     );
