@@ -1,7 +1,7 @@
 "use client";
 
 import CalendarComponent from "@/components/CalendarComponent";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +33,10 @@ const Calendar = () => {
     const [classes, setClasses] = useState([]);
 
     useEffect(() => {
+        console.log("events: ", events);
+    }, [events]);
+
+    useEffect(() => {
         if (!session?.accessToken) return;
 
         const fetchAllCalendars = async () => {
@@ -61,12 +65,16 @@ const Calendar = () => {
 
                 const fetchEventsFromAllCalendars = async () => {
                     let allEvents = [];
+                    const today = new Date().toISOString();
+
                     for (const calendarId of allCalendarIds) {
                         let nextPageToken = null;
                         do {
                             try {
                                 const response = await fetch(
-                                    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?maxResults=1000&singleEvents=true&orderBy=startTime${
+                                    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?maxResults=100&singleEvents=true&orderBy=startTime&timeMin=${encodeURIComponent(
+                                        today
+                                    )}${
                                         nextPageToken
                                             ? `&pageToken=${nextPageToken}`
                                             : ""
@@ -107,6 +115,11 @@ const Calendar = () => {
                                         ...allEvents,
                                         ...calendarEvents,
                                     ];
+
+                                    if (allEvents.length >= 100) {
+                                        allEvents = allEvents.slice(0, 100);
+                                        break;
+                                    }
                                 }
 
                                 nextPageToken = data.nextPageToken || null;
@@ -116,10 +129,16 @@ const Calendar = () => {
                                     error
                                 );
                                 nextPageToken = null;
+                                console.error(
+                                    `Error fetching events from calendar ${calendarId}:`,
+                                    error
+                                );
+                                nextPageToken = null;
                             }
-                        } while (nextPageToken);
+                        } while (nextPageToken && allEvents.length < 100);
                     }
-                    setEvents(allEvents);
+
+                    setEvents(allEvents.slice(0, 100));
                 };
 
                 fetchEventsFromAllCalendars();
@@ -129,6 +148,11 @@ const Calendar = () => {
         };
 
         fetchAllCalendars();
+        console.log("Session:", session);
+
+        // if (session? != null) {
+        //     fetchSessionInfo();
+        // }
     }, [session]);
 
     const addEvent = () => {
@@ -193,10 +217,19 @@ const Calendar = () => {
             );
 
             setDepartments(departmentArray);
-            console.log(departmentArray); // Check the result
+            console.log(departmentArray);
         } catch (error) {
             console.error("Error fetching departments:", error);
         }
+    };
+
+    const handleGoogleCalendarConnect = async () => {
+        if (session) {
+            await signOut();
+        } else {
+            await signIn("google");
+        }
+        fetchSessionInfo();
     };
 
     const handleSelect = async (selectionInfo) => {
@@ -205,7 +238,7 @@ const Calendar = () => {
             title,
             start: selectionInfo.startStr,
             end: selectionInfo.endStr,
-            calendarId: "primary", // ✅ Ensure new events have a calendar ID
+            calendarId: "primary",
         };
 
         setEvents((prevEvents) => [...prevEvents, newEvent]);
@@ -249,7 +282,6 @@ const Calendar = () => {
 
     const fetchClassesForDepartment = async (departmentName) => {
         try {
-            // Extract department name only (e.g., "QM" from "QM(123)")
             const depName = departmentName.split("(")[0];
 
             const response = await fetch(
@@ -281,6 +313,50 @@ const Calendar = () => {
             console.error("Error fetching classes:", error);
         }
     };
+
+    const fetchSessionInfo = async () => {
+        if (!session?.user?.email) {
+            console.error("Error: session.user.email is undefined");
+            return;
+        }
+
+        try {
+            const response = await fetch("http://127.0.0.1:5000/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email: session.user.email }),
+            });
+
+            const data = await response.json();
+            console.log("PRINTING DATA: ", data);
+        } catch (error) {
+            console.error("Error fetching session info:", error);
+        }
+    };
+
+    // const fetchSessionInfo = async () => {
+    //     if (!session?.user?.email) {
+    //         console.error("Error: session.user.email is undefined");
+    //         return;
+    //     }
+
+    //     try {
+    //         const response = await fetch("http://127.0.0.1:5000/login", {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({ email: session.user.email }),
+    //         });
+
+    //         const data = await response.json();
+    //         console.log("PRINTING DATA: ", data);
+    //     } catch (error) {
+    //         console.error("Error fetching session info:", error);
+    //     }
+    // };
 
     const handleDepartmentSelect = (departmentName) => {
         setValue(departmentName);
