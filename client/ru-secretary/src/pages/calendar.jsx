@@ -556,26 +556,19 @@ const Calendar = () => {
                 </button>
                 <div
                     style={{
-                        padding: "1rem",
-                        backgroundColor: "white",
-                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
                         borderRadius: "8px",
                         flexGrow: 1,
+                        minWidth: "100px",
+                    maxWidth: "150px",
                     }}
                 >
                     <button
-                        className="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-700"
+                        className="mb-4 px-4 py-2 bg-gray-500 text-black rounded-lg hover:bg-gray-700"
                         onClick={() => (session ? signOut() : signIn("google"))}
                     >
                         {session
                             ? "Disconnect Google Calendar"
                             : "Connect to Google Calendar"}
-                    </button>
-                    <button
-                        className="px-4 py-2 text-black rounded-lg bg-green-500 hover:bg-green-700"
-                        onClick={addEvent}
-                    >
-                        Add Task
                     </button>
                 </div>
             </div>
