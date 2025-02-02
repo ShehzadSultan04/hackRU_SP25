@@ -5,7 +5,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import timeGridPlugin from '@fullcalendar/timegrid'
 
 
-export default function CalendarPage({ events, handleSelect }) {
+export default function CalendarComponent({ events, handleSelect }) {
 
 
     return (
