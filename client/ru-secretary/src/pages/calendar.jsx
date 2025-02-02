@@ -58,30 +58,30 @@ const Calendar = () => {
             
         }
 
-        try {
-            const response = await fetch(
-                `https://www.googleapis.com/calendar/v3/calendars/${GOOGLE_CALENDAR_ID}/events?key=${GOOGLE_API_KEY}`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        summary: newEvent.title,
-                        start: { dateTime: newEvent.start, timeZone: "UTC" },
-                        end: { dateTime: newEvent.end, timeZone: "UTC" },
-                    }),
-                }
-            );
+        // try {
+        //     const response = await fetch(
+        //         `https://www.googleapis.com/calendar/v3/calendars/${GOOGLE_CALENDAR_ID}/events?key=${GOOGLE_API_KEY}`,
+        //         {
+        //             method: "POST",
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //             },
+        //             body: JSON.stringify({
+        //                 summary: newEvent.title,
+        //                 start: { dateTime: newEvent.start, timeZone: "UTC" },
+        //                 end: { dateTime: newEvent.end, timeZone: "UTC" },
+        //             }),
+        //         }
+        //     );
     
-            if (response.ok) {
-                console.log("Event added to Google Calendar successfully!");
-            } else {
-                console.error("Failed to add event to Google Calendar.");
-            }
-        } catch (error) {
-            console.error("Error sending event to Google Calendar:", error);
-        }
+        //     if (response.ok) {
+        //         console.log("Event added to Google Calendar successfully!");
+        //     } else {
+        //         console.error("Failed to add event to Google Calendar.");
+        //     }
+        // } catch (error) {
+        //     console.error("Error sending event to Google Calendar:", error);
+        // }
     };
 
     return (
