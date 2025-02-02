@@ -59,6 +59,59 @@ const Calendar = () => {
     
         return targetDate.toISOString(); // Full ISO string for Google Calendar format
     };
+
+    const handleSectionClick = async (section, className) => {
+        const newEvents = section.timings.map((time, index) => ({
+            id: `${className}-${section.sectionNumber}-${index}`,
+            title: `${className} - Section ${section.sectionNumber}`,
+            start: getDateTimeForNextDay(time[0], time[1]),
+            end: getDateTimeForNextDay(time[0], time[2]),
+            color: "blue",
+            calendarId: "primary",
+        }));
+    
+        // Prevent duplicate entries in local events
+        // setEvents((prevEvents) => {
+        //     const existingIds = new Set(prevEvents.map(event => event.id));
+        //     const filteredNewEvents = newEvents.filter(event => !existingIds.has(event.id));
+        //     return [...prevEvents, ...filteredNewEvents];
+        // });
+    
+        if (session?.accessToken) {
+            try {
+                for (const event of newEvents) {
+                    const response = await fetch(
+                        `https://www.googleapis.com/calendar/v3/calendars/primary/events`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${session.accessToken}`,
+                            },
+                            body: JSON.stringify({
+                                summary: event.title,
+                                start: {
+                                    dateTime: event.start,
+                                    timeZone: "UTC",
+                                },
+                                end: { dateTime: event.end, timeZone: "UTC" },
+                            }),
+                        }
+                    );
+    
+                    if (!response.ok) {
+                        console.error("Failed to add event to Google Calendar.");
+                    }
+                }
+                alert(`Section ${section.sectionNumber} added to Google Calendar!`);
+            } catch (error) {
+                console.error("Error sending section to Google Calendar:", error);
+                alert("Error adding section.");
+            }
+        }
+    };
+    
+    
     
 
     const handleSectionHover = (section, className) => {
@@ -582,12 +635,12 @@ const Calendar = () => {
                 >
                     Add Class
                 </button>
-                <button
+                {/* <button
                     className="px-4 py-2 text-black rounded-lg bg-green-500 hover:bg-green-700"
                     onClick={addClass}
                 >
                     Add Task
-                </button>
+                </button> */}
                 <div
                     style={{
                         borderRadius: "8px",
@@ -706,10 +759,12 @@ const Calendar = () => {
                                 sections[classItem.name].map((section, i) => (
                                     <li
     key={i}
-    className="text-gray-600 p-2 border-b"
+    className="text-gray-600 p-2 border-b cursor-pointer hover:bg-gray-200"
     onMouseEnter={() => handleSectionHover(section, classItem.name)}
     onMouseLeave={handleSectionHoverLeave}
+    onClick={() => handleSectionClick(section, classItem.name)}
 >
+
 
                                         <div className="font-semibold">Section {section.sectionNumber}</div>
                                         <div>Code: {section.sectionCode}</div>
