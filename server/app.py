@@ -49,16 +49,23 @@ def signup():
 @app.get("/getDeps")
 def getDeps():
     deps = dict([(x["departmentName"], x["departmentCode"]) for x in departments.find({}).to_list()])
-    return departments.find({}).to_list()
+    return jsonify(deps)
 
-@app.get("/getClassFromDep")
+@app.post("/getClassFromDep")
 def getClassFromDep():
     depName = request.json["dep"]
     
-    results = classes.find({"departmentName": depName}).to_list()
+    allClasses = classes.find({"department": depName}).to_list()
+    results = {}
+    
+    for x in allClasses:
+        if x["name"] not in results.keys():
+            results[x["name"]] = x["credits"]
     
     if len(results) != 0:
         return jsonify(results)
+    else:
+        return jsonify({"status": 400})
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
