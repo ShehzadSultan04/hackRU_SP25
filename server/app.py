@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, jsonify, session
 from flask_cors import CORS
 import passwords
 from pymongo import MongoClient
-import googlemaps
 from datetime import datetime
 
 app = Flask(__name__)
