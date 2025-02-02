@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, session
 from flask_cors import CORS
 import passwords
 from pymongo import MongoClient
 
 app = Flask(__name__)
 CORS(app)
+app.secret_key = passwords.secret_key
 
 client = MongoClient(passwords.passwords["MongoURI"])
 db = client["Secretary"]
@@ -26,6 +27,7 @@ def login():
     results = users.find({"$and": [{"username": username}, {"password": password}]}).to_list()
     
     if len(results) == 1:
+        session["username"] = username
         return jsonify({"status": 200, "username": username})
     else:
         return jsonify({"status": 400})
@@ -43,6 +45,13 @@ def signup():
     if len(results) == 0:
         users.insert_one({"username": username, "password": password})
         return jsonify({"status": 200})
+    else:
+        return jsonify({"status": 400})
+
+@app.get("/checkAuth")
+def checkAuth():
+    if "username" in session:
+        return jsonify({"status": 200, "username": session["username"]})
     else:
         return jsonify({"status": 400})
 
