@@ -17,49 +17,82 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-
-const GOOGLE_API_KEY = "AIzaSyCeo1dpg_zeXTKgE9YV2PISBv3brnHf0fk";
-const GOOGLE_CALENDAR_ID =
-    "c_d9b7221ec3e541dceff75eabcbddd4c818039c47de0b73dbfcf8f3b05753a04e@group.calendar.google.com";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 const Calendar = () => {
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState("");
-    const [events, setEvents] = useState([
-        {
-            title: "class 1",
-            start: "2025-02-05T12:00:00",
-            end: "2025-02-05T14:00:00",
-            resourceId: "b",
-            color: "green",
-        },
-    ]);
+    const { data: session } = useSession();
+    const [events, setEvents] = useState([]);
 
     const [departments, setDepartments] = useState([]);
     const [classes, setClasses] = useState([]);
 
     useEffect(() => {
-        const fetchGoogleCalendarEvents = async () => {
+        if (!session?.accessToken) return;
+
+        const fetchAllCalendars = async () => {
             try {
-                const response = await fetch(
-                    `https://www.googleapis.com/calendar/v3/calendars/${GOOGLE_CALENDAR_ID}/events?key=${GOOGLE_API_KEY}`
+                const calendarListResponse = await fetch(
+                    `https://www.googleapis.com/calendar/v3/users/me/calendarList`,
+                    {
+                        headers: { Authorization: `Bearer ${session.accessToken}` },
+                    }
                 );
-                const data = await response.json();
-                const googleEvents = data.items.map((event) => ({
-                    id: event.id,
-                    title: event.summary,
-                    start: event.start.dateTime || event.start.date,
-                    end: event.end?.dateTime || event.end?.date,
-                    color: "purple",
-                }));
-                setEvents((prevEvents) => [...prevEvents, ...googleEvents]);
+                const calendarListData = await calendarListResponse.json();
+
+                if (!calendarListData.items || calendarListData.items.length === 0) {
+                    console.error("No calendars found for this user.");
+                    return;
+                }
+
+                const allCalendarIds = calendarListData.items.map(calendar => calendar.id);
+
+                const fetchEventsFromAllCalendars = async () => {
+                    let allEvents = [];
+                    for (const calendarId of allCalendarIds) {
+                        let nextPageToken = null;
+                        do {
+                            try {
+                                const response = await fetch(
+                                    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?maxResults=1000&singleEvents=true&orderBy=startTime${nextPageToken ? `&pageToken=${nextPageToken}` : ""}`,
+                                    {
+                                        headers: { Authorization: `Bearer ${session.accessToken}` },
+                                    }
+                                );
+                                const data = await response.json();
+
+                                if (data.items) {
+                                    const calendarEvents = data.items.map(event => ({
+                                        id: event.id,
+                                        title: event.summary || "Untitled Event",
+                                        start: event.start?.dateTime || event.start?.date || null,
+                                        end: event.end?.dateTime || event.end?.date || event.start?.dateTime || event.start?.date || null,
+                                        color: "purple",
+                                        calendarId: calendarId,
+                                    })).filter(event => event.start !== null);
+
+                                    allEvents = [...allEvents, ...calendarEvents];
+                                }
+
+                                nextPageToken = data.nextPageToken || null;
+                            } catch (error) {
+                                console.error(`Error fetching events from calendar ${calendarId}:`, error);
+                                nextPageToken = null; 
+                            }
+                        } while (nextPageToken);
+                    }
+                    setEvents(allEvents);
+                };
+
+                fetchEventsFromAllCalendars();
             } catch (error) {
-                console.error("Error fetching Google Calendar events:", error);
+                console.error("Error fetching user's calendar list:", error);
             }
         };
 
-        fetchGoogleCalendarEvents();
-    }, []);
+        fetchAllCalendars();
+    }, [session]);
 
     const addEvent = () => {
         const newEvent = {
@@ -67,8 +100,40 @@ const Calendar = () => {
             start: "2025-02-06T15:50:00",
             end: "2025-02-06T17:10:00",
             color: "orange",
+            calendarId: "primary",
         };
         setEvents([...events, newEvent]);
+
+        if (session?.accessToken) {
+            try {
+                fetch(
+                    `https://www.googleapis.com/calendar/v3/calendars/primary/events`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${session.accessToken}`,
+                        },
+                        body: JSON.stringify({
+                            summary: newEvent.title,
+                            start: { dateTime: newEvent.start, timeZone: "UTC" },
+                            end: { dateTime: newEvent.end, timeZone: "UTC" },
+                        }),
+                    }
+                ).then(response => {
+                    if (response.ok) {
+                        console.log("Event added to Google Calendar successfully!");
+                        alert(`Event "${newEvent.title}" added to Google Calendar!`);
+                    } else {
+                        console.error("Failed to add event to Google Calendar.");
+                        alert(`Event "${newEvent.title}" failed`);
+                    }
+                });
+            } catch (error) {
+                console.error("Error sending event to Google Calendar:", error);
+                alert("Error");
+            }
+        }
     };
 
     const addClass = async () => {
@@ -94,10 +159,43 @@ const Calendar = () => {
             title,
             start: selectionInfo.startStr,
             end: selectionInfo.endStr,
+            calendarId: "primary", // ✅ Ensure new events have a calendar ID
         };
-
+    
         setEvents((prevEvents) => [...prevEvents, newEvent]);
+    
+        if (session?.accessToken) {
+            try {
+                const response = await fetch(
+                    `https://www.googleapis.com/calendar/v3/calendars/primary/events`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${session.accessToken}`,
+                        },
+                        body: JSON.stringify({
+                            summary: newEvent.title,
+                            start: { dateTime: newEvent.start, timeZone: "UTC" },
+                            end: { dateTime: newEvent.end, timeZone: "UTC" },
+                        }),
+                    }
+                );
+    
+                if (response.ok) {
+                    console.log("Event added to Google Calendar successfully!");
+                    alert(`Event "${newEvent.title}" added to Google Calendar!`);
+                } else {
+                    console.error("Failed to add event to Google Calendar.");
+                    alert(`Event "${newEvent.title}" failed`);
+                }
+            } catch (error) {
+                console.error("Error sending event to Google Calendar:", error);
+                alert("Error");
+            }
+        }
     };
+    
 
     const fetchClassesForDepartment = async (departmentName) => {
         try {
@@ -136,31 +234,58 @@ const Calendar = () => {
         setOpen(false);
         fetchClassesForDepartment(departmentName);
     };
+    
+    
+
+    const handleEventDelete = async (eventId) => {
+        const eventToDelete = events.find(event => event.id === eventId);
+    
+        if (!eventToDelete || !eventToDelete.calendarId) {
+            console.error("Calendar ID is missing for event:", eventId);
+            alert("Error: Calendar ID is missing. Cannot delete this event.");
+            return;
+        }
+    
+        const confirmDelete = window.confirm("Are you sure you want to delete this event?");
+        if (!confirmDelete) return;
+    
+        setEvents((prevEvents) => prevEvents.filter(event => event.id !== eventId));
+    
+        if (session?.accessToken) {
+            try {
+                const response = await fetch(
+                    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(eventToDelete.calendarId)}/events/${encodeURIComponent(eventId)}`,
+                    {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${session.accessToken}` },
+                    }
+                );
+    
+                if (response.ok) {
+                    console.log("Event deleted from Google Calendar successfully!");
+                    alert("Event deleted!");
+                } else {
+                    const errorData = await response.json();
+                    console.error("Failed to delete event from Google Calendar:", errorData);
+                    alert(`Failed to delete event: ${errorData.error?.message}`);
+                }
+            } catch (error) {
+                console.error("Error deleting event from Google Calendar:", error);
+                alert("Error deleting event.");
+            }
+        }
+    };
+    
+    
 
     return (
         <div style={{ display: "flex", height: "100vh", width: "100%" }}>
-            {/* Sidebar */}
-            <div
-                style={{
-                    padding: "1rem",
-                    backgroundColor: "#f3f4f6",
-                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    borderRadius: "8px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1rem",
-                    height: "100%",
-                    width: "25%",
-                    minWidth: "100px",
-                    maxWidth: "150px",
-                }}
-            >
-                <button
-                    className="px-4 py-2 text-black rounded-lg bg-blue-500 hover:bg-blue-700"
-                    onClick={addClass}
-                    style={{ display: "flex", flexDirection: "column" }}
-                >
-                    Add Class
+            <div style={{ padding: "1rem", backgroundColor: "#f3f4f6", boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "1rem", height: "100%", width: "25%", minWidth: "100px", maxWidth: "150px" }}>
+                <button className="px-4 py-2 text-black rounded-lg bg-blue-500 hover:bg-blue-700" onClick={addClass}>Add Class</button>
+                <button className="px-4 py-2 text-black rounded-lg bg-green-500 hover:bg-green-700" onClick={addClass}>Add Task</button>
+                <div style={{ padding: "1rem", backgroundColor: "white", boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", borderRadius: "8px", flexGrow: 1 }}>
+                <button className="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-700" onClick={() => (session ? signOut() : signIn("google"))}>
+                    {session ? "Disconnect Google Calendar" : "Connect to Google Calendar"}
                 </button>
                 <button
                     className="px-4 py-2 text-black rounded-lg bg-green-500 hover:bg-green-700"
@@ -169,6 +294,8 @@ const Calendar = () => {
                     Add Task
                 </button>
             </div>
+            </div>
+            
 
             {/* Departments Dropdown */}
             <div
@@ -279,11 +406,7 @@ const Calendar = () => {
                     flexGrow: 1,
                 }}
             >
-                <CalendarComponent
-                    events={events}
-                    setEvents={setEvents}
-                    handleSelect={handleSelect}
-                />
+                <CalendarComponent events={events} setEvents={setEvents} handleSelect={handleSelect} handleEventDelete={handleEventDelete} />
             </div>
         </div>
     );

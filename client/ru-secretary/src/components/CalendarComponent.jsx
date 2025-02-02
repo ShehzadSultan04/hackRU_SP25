@@ -5,7 +5,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import timeGridPlugin from '@fullcalendar/timegrid'
 
 
-export default function CalendarComponent({ events, handleSelect }) {
+export default function CalendarComponent({ events, handleSelect, handleEventDelete }) {
 
 
     return (
@@ -34,6 +34,7 @@ export default function CalendarComponent({ events, handleSelect }) {
                     { id: 'c', title: 'Auditorium C', eventColor: 'orange' },
                 ]}
                 events={events}
+                eventClick={(info) => handleEventDelete(info.event.id)} 
 
             />
         </div>
