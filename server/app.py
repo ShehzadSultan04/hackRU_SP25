@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, jsonify, session
 from flask_cors import CORS
 import passwords
 from pymongo import MongoClient
+import googlemaps
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -18,6 +20,17 @@ departments = db["Departments"]
 def index():
     return"<h1><a href=\"/signup\">signup</a></h1><h1><a href=\"/login\">login</a></h1>"
 
+@app.get('/login')
+def loginPage():
+    gmaps = googlemaps.Client(key=passwords.passwords["GoogleAPIKey"])
+    now = datetime.now()
+    directions_result = gmaps.directions("Sydney Town Hall",
+                                     "Parramatta, NSW",
+                                     mode="transit",
+                                     departure_time=now)
+    print(directions_result)
+
+    return directions_result
 
 @app.post("/login")
 def login():
@@ -69,7 +82,9 @@ def getClassFromDep():
 
     for x in allClasses:
         if x["name"] not in results.keys():
-            results[x["name"]] = x["credits"]
+            results[x["name"]] = [x["credits"], x["times"]]
+        else:
+            results[x["name"]].append(x["times"])
 
     if len(results) != 0:
         return jsonify(results)
