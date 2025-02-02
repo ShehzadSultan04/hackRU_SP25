@@ -28,6 +28,21 @@ const Login = () => {
             setError("Error: " + error.message);
         }
     };
+    // const getBS = async (e) => {
+    //     e.preventDefault();
+    //     try {
+    //         const response = await fetch("http://127.0.0.1:5000/getDeps");
+
+    //         if (response.ok) {
+    //             console.log(await response.json());
+    //         } else {
+    //             const errorText = await response.text();
+    //             setError("Sign Up Failed: " + errorText);
+    //         }
+    //     } catch (error) {
+    //         setError("Error: " + error.message);
+    //     }
+    // };
 
     return (
         <div style={{ paddingLeft: "20px" }}>
@@ -57,6 +72,11 @@ const Login = () => {
                     Login
                 </button>
                 {error && <p>{error}</p>}
+
+                {/* <button className="mb-2" onClick={getBS}>
+                    {" "}
+                    Hello
+                </button> */}
             </form>
         </div>
     );

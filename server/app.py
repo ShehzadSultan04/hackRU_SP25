@@ -22,9 +22,9 @@ def index():
 def login():
     username = request.json["username"]
     password = request.json["password"]
-    
+
     results = users.find({"$and": [{"username": username}, {"password": password}]}).to_list()
-    
+
     if len(results) == 1:
         return jsonify({"status": 200, "username": username})
     else:
@@ -33,12 +33,12 @@ def login():
 
 @app.post("/signup")
 def signup():
-    
+
     username = request.json["username"]
     password = request.json["password"]
-    
+
     results = users.find({"username": username}).to_list()
-        
+
     # #check if user already exists
     if len(results) == 0:
         users.insert_one({"username": username, "password": password})
@@ -49,14 +49,14 @@ def signup():
 @app.get("/getDeps")
 def getDeps():
     deps = dict([(x["departmentName"], x["departmentCode"]) for x in departments.find({}).to_list()])
-    return departments.find({}).to_list()
+    return jsonify(deps)
 
 @app.get("/getClassFromDep")
 def getClassFromDep():
     depName = request.json["dep"]
-    
+
     results = classes.find({"departmentName": depName}).to_list()
-    
+
     if len(results) != 0:
         return jsonify(results)
 
