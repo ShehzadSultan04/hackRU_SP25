@@ -45,20 +45,20 @@ const Calendar = () => {
         setEvents([...events, newEvent]); 
     };
 
-    const handleSelect = async (selectInfo) => {
-        const title = prompt("Enter Event Title:"); 
-        if (title) {
+    const handleSelect = async (selectionInfo) => {
+        const title = prompt("Enter Event Title:") || "Untitled Event";
+    
+        //try {
             const newEvent = {
-                title: title | "Untitled Event",
-                start: selectInfo.startStr,
-                end: selectInfo.endStr,
+                title,
+                start: selectionInfo.startStr,
+                end: selectionInfo.endStr,
+                color: "blue"
             };
-            setEvents([...events, newEvent]); 
 
-            
-        }
-
-        // try {
+    
+            setEvents((prevEvents) => [...prevEvents, newEvent]);
+    
         //     const response = await fetch(
         //         `https://www.googleapis.com/calendar/v3/calendars/${GOOGLE_CALENDAR_ID}/events?key=${GOOGLE_API_KEY}`,
         //         {
@@ -76,11 +76,14 @@ const Calendar = () => {
     
         //     if (response.ok) {
         //         console.log("Event added to Google Calendar successfully!");
+        //         alert(`Event "${newEvent.title}" added to Google Calendar!`);
         //     } else {
         //         console.error("Failed to add event to Google Calendar.");
+        //         alert(`Event "${newEvent.title}" failed `);
         //     }
         // } catch (error) {
         //     console.error("Error sending event to Google Calendar:", error);
+        //     alert(`Error`);
         // }
     };
 
