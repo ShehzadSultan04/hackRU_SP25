@@ -42,7 +42,7 @@ def map():
     
     # l1 = "607 Allison Rd, Piscataway, NJ 08854".replace(" ", "+")
     # l2 = "599 Taylor Rd, Piscataway, NJ 08854".replace(" ", "+")
-    mapurl = "https://maps.googleapis.com/maps/api/staticmap?size=400x400&markers="+ l1.replace(" ", "+") +"%7C" + l2.replace(" ", "+") + "&path=enc:" + directions_result[0]["overview_polyline"]["points"] + "&key=" + passwords.passwords["GoogleAPIKey"]
+    mapurl = "https://maps.googleapis.com/maps/api/staticmap?scale=2&size=400x400&markers="+ l1.replace(" ", "+") +"%7C" + l2.replace(" ", "+") + "&path=enc:" + directions_result[0]["overview_polyline"]["points"] + "&key=" + passwords.passwords["GoogleAPIKey"]
 
     return jsonify({"mapurl": mapurl})
 
@@ -54,11 +54,11 @@ def login():
 
     if len(results) == 1:
         session["username"] = username
-        return jsonify({"status": 200, "username": username})
+        return jsonify({"status": 200})
     else:
         users.insert_one({"username": username})
         session["username"] = username
-        return jsonify({"status": 400})
+        return jsonify({"status": 200, "username": username})
 
 
 @app.post("/signup")
