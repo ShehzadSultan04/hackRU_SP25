@@ -40,7 +40,10 @@ export default function Directions() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-white ">
+        <div
+            style={{ padding: "1rem" }}
+            className="flex flex-col items-center justify-center min-h-screen bg-white"
+        >
             <h1 className="text-3xl font-bold text-gray-900 mb-6">
                 Directions
             </h1>

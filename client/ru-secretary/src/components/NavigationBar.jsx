@@ -22,11 +22,11 @@ const NavigationBar = () => {
                 </button>
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav me-auto">
-                        <li className="nav-item active">
+                        {/* <li className="nav-item active">
                             <a className="nav-link" href="/dashboard">
                                 Dashboard
                             </a>
-                        </li>
+                        </li> */}
                         <li className="nav-item active">
                             <a className="nav-link" href="/calendar">
                                 Calendar
